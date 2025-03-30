@@ -30,7 +30,7 @@ My current character embedding algorithm is pretty simple, embeddings are simply
 
 I.e. 'A' = \[0, 1, 0, 0, 0, 0, 0, 1\]
 
-In the paper the author's work with an actual dataset of DNA sequences. This dataset contains sequences and their accompanying "reads", which contain random errors.
+In the paper, the authors work with an actual dataset of DNA sequences. This dataset contains sequences and their accompanying "reads", which contain random errors.
 In this repo I generate synthetic data, mainly focusing on generating what the authors refer to as "homologous" and "non-homologous" pairs.
 
 **Homologous pairs** are statistically related. In this repo homologous pairs consist of a source string, and a "mangled" string. The mangled string is the source string after being modified by a random sequence of edits.
