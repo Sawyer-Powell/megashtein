@@ -1,18 +1,3 @@
----
-title: "Megashtein: Deep Squared Euclidean Approximation to Levenshtein Distance"
-description: "PyTorch implementation of neural network sequence embedding for approximate edit distance computation."
-tags:
-  - pytorch
-  - neural-network
-  - levenshtein-distance
-  - sequence-embedding
-  - edit-distance
-  - string-similarity
-  - deep-learning
-license: mit
-language: en
----
-
 # megashtein
 
 In their paper ["Deep Squared Euclidean Approximation to the Levenshtein Distance for DNA Storage"](https://arxiv.org/abs/2207.04684), Guo et al. explore techniques for using a neural network to embed sequences in such a way that the squared Euclidean distance between embeddings approximates the Levenshtein distance between the original sequences. This implementation also takes techniques from ["Levenshtein Distance Embeddings with Poisson Regression for DNA Storage" by Wei et al. (2023)](https://arxiv.org/pdf/2312.07931v1).
