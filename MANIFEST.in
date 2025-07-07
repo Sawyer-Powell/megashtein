@@ -1,4 +1,3 @@
 include README.md
 include LICENSE
-include megashtein_trained_model.pth
-recursive-include src/megashtein *.py
+recursive-include src/megashtein *.py *.pth

@@ -25,7 +25,7 @@ def load_model():
         Loaded model instance
     """
 
-    model_path = Path(__file__).parent.parent.parent / "megashtein_trained_model.pth"
+    model_path = Path(__file__).parent / "megashtein_trained_model.pth"
 
     model = EditDistanceModel(embedding_dim=140)
     model.load_state_dict(torch.load(model_path, map_location='cpu'))

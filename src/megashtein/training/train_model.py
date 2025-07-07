@@ -21,10 +21,10 @@ def train():
 
     # Training parameters
     learning_rate = 0.000817
-    num_steps = 1000
+    num_steps = 2000
     size = 80
-    batch_size = 32
-    use_gradient_clipping = True
+    batch_size = 128
+    use_gradient_clipping = False
     max_grad_norm = 2.463
     distance_metric = "euclidean"
 
