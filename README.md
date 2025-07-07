@@ -1,14 +1,14 @@
 # megashtein
 
-In their paper [Guo et al.](https://arxiv.org/abs/2207.04684) explore techniques for using a neural network to hash
-DNA sequences in such a way that you can do "fuzzy" searches over them using
-vector similarity. The distance between two DNA sequence vectors is an approximation
-of their [levenshtein distance](https://en.wikipedia.org/wiki/Levenshtein_distance).
+In their paper ["Deep Squared Euclidean Approximation to the Levenshtein Distance for DNA Storage"](https://arxiv.org/abs/2207.04684), Guo et al. explore techniques for using a neural network to embed sequences in such a way that the squared Euclidean distance between embeddings approximates the Levenshtein distance between the original sequences.
 
-This is cool because there are excellent libraries for doing fast GPU accelerated searches
-for the K nearest neighbors of vectors, like [faiss](https://github.com/facebookresearch/faiss). Algorithms
-like [HNSW](https://en.wikipedia.org/wiki/Hierarchical_navigable_small_world) allow us to do these searches in logarithmic time,
-where a brute force levenshtein distance based fuzzy search would need to run in exponential time.
+This is valuable because there are excellent libraries for doing fast GPU accelerated searches for the K nearest neighbors of vectors, like [faiss](https://github.com/facebookresearch/faiss). Algorithms like [HNSW](https://en.wikipedia.org/wiki/Hierarchical_navigable_small_world) allow us to do these searches in logarithmic time, where a brute force levenshtein distance based fuzzy search would need to run in exponential time.
 
-In this repo I'm working on reimplementing Guo's paper in PyTorch, applying it to ASCII sequences,
-not DNA sequences.
+This repo contains a PyTorch implementation of the core ideas from Guo's paper, adapted for ASCII sequences rather than DNA sequences. The implementation includes:
+
+- A convolutional neural network architecture for sequence embedding
+- Training using Poisson regression loss (PNLL) as described in the paper
+- Synthetic data generation with controlled edit distance relationships
+- Model saving and loading functionality
+
+The trained model learns to embed ASCII strings such that the squared Euclidean distance between embeddings approximates the true Levenshtein distance between the strings.

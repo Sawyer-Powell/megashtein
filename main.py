@@ -6,10 +6,6 @@ from rapidfuzz.distance.Levenshtein import distance as ldistance
 from torch.optim import AdamW
 from models import EditDistanceModel
 
-def get_minimal_improved_model(embedding_dim: int = 16):
-    """Returns a new instance of the minimal improved model with light enhancements."""
-    return EditDistanceModel(embedding_dim=embedding_dim)
-
 def pad_with_null(string: str, target_length: int):
     null_char = "\0"
     padding_needed = max(0, target_length - len(string))
@@ -114,8 +110,6 @@ def get_non_homologous_pair(
 def squared_euclidean_distance(v1: torch.Tensor, v2: torch.Tensor) -> torch.Tensor:
     return torch.sum((v1 - v2) ** 2, dim=1)
 
-
-
 def get_batch(
     size: int, batch_size: int
 ) -> list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]:
@@ -146,7 +140,6 @@ def estimate_M(length: int, num_samples: int = 1000) -> float:
 def get_distances(
     batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
     model: torch.nn.Module,
-    distance_metric: str = "euclidean",
     M: float | None = None,
     embedding_dim: int | None = None
 ):
@@ -158,9 +151,8 @@ def get_distances(
 
     ds = torch.stack([b[2] for b in batch])
 
-    # Use euclidean distance (only one used in main)
     d_hats = squared_euclidean_distance(first, second)
-    # Apply scaling factor if M and embedding_dim are provided
+
     if M is not None and embedding_dim is not None:
         # r(n) = sqrt(M / (2n)) from paper Eq. 6
         # We need r(n)^2 * d_hats, so (M / (2n)) * d_hats
@@ -172,20 +164,15 @@ def get_distances(
 def approximation_error(d_hat: torch.Tensor, d: torch.Tensor):
     return torch.mean(torch.abs(d - d_hat))
 
-def get_loss(d_hat: torch.Tensor, d: torch.Tensor, loss_type: str = "wei_poisson") -> torch.Tensor:
+def get_loss(d_hat: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
     """
     Wei et al. Poisson regression loss function
     """
-    if loss_type == "wei_poisson":
-        # Wei et al. Poisson regression with improved numerical stability
-        # PNLL(d̂, d) = d̂ - d * ln(d̂) with better handling of edge cases
-        epsilon = 1e-8
-        d_hat_stable = torch.clamp(d_hat, min=epsilon)
-        return torch.mean(d_hat_stable - d * torch.log(d_hat_stable))
-    else:
-        raise ValueError(f"Unknown loss type: {loss_type}")
-
-
+    # Wei et al. Poisson regression with improved numerical stability
+    # PNLL(d̂, d) = d̂ - d * ln(d̂) with better handling of edge cases
+    epsilon = 1e-8
+    d_hat_stable = torch.clamp(d_hat, min=epsilon)
+    return torch.mean(d_hat_stable - d * torch.log(d_hat_stable))
 
 def validate_training_data(batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]) -> dict:
     """Validate and analyze training batch quality"""
@@ -203,6 +190,7 @@ def validate_training_data(batch: list[tuple[torch.Tensor, torch.Tensor, torch.T
     return stats
 
 def run_experiment(
+    embedding_dim: int,
     model: torch.nn.Module,
     learning_rate: float,
     num_steps: int,
@@ -210,8 +198,7 @@ def run_experiment(
     batch_size: int,
     use_gradient_clipping: bool = True,
     max_grad_norm: float = 1.0,
-    distance_metric: str = "euclidean",
-    loss_type: str = "wei_poisson",
+    distance_metric: str = "euclidean"
 ):
     """
     Runs a training experiment with the given parameters and improved loss functions.
@@ -225,20 +212,11 @@ def run_experiment(
     M_estimate = estimate_M(size)
     print(f"Estimated M (average non-homologous distance): {M_estimate:.2f}")
 
-    # Get embedding dimension from the model
-    embedding_dim = model.embedding.embedding_dim
-
     for x in range(num_steps):
         batch = get_batch(size, batch_size)
 
-        # Validate training data quality periodically
-        if x % 100 == 0:
-            stats = validate_training_data(batch)
-            print(f"Batch stats at step {x}: mean_dist={stats['mean_distance']:.2f}, "
-                  f"std_dist={stats['std_distance']:.2f}, zeros={stats['zero_distance_count']}")
-
         distances = get_distances(batch, model, distance_metric, M=M_estimate, embedding_dim=embedding_dim)
-        loss = get_loss(distances[0], distances[1], loss_type)
+        loss = get_loss(distances[0], distances[1])
 
         if x % 10 == 0:
             print(
@@ -246,19 +224,6 @@ def run_experiment(
             )
 
         loss.backward()
-
-        # Apply gradient clipping if enabled and model supports it
-        if use_gradient_clipping and hasattr(model, 'clip_gradients'):
-            model.clip_gradients(max_grad_norm)
-
-            # Log gradient norm occasionally for monitoring
-            if x % 100 == 0:
-                grad_norm = model.get_gradient_norm()
-                print(f"Gradient norm at step {x}: {grad_norm:.4f}")
-        elif use_gradient_clipping:
-            # Apply standard gradient clipping for models without custom method
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_grad_norm)
-
         optimizer.step()
         scheduler.step()
 
@@ -267,11 +232,13 @@ def run_experiment(
 
     return final_loss, final_approx_error
 
-
 if __name__ == "__main__":
-    model = get_minimal_improved_model(embedding_dim=140)
+    embedding_dim = 140
+
+    model = EditDistanceModel(embedding_dim=embedding_dim)
 
     final_loss, final_approx_error = run_experiment(
+        embedding_dim=embedding_dim,
         model=model,
         learning_rate=0.000817,
         num_steps=1000,
@@ -280,7 +247,6 @@ if __name__ == "__main__":
         use_gradient_clipping=True,
         max_grad_norm=2.463,
         distance_metric="euclidean",
-        loss_type="wei_poisson",
     )
 
     print(f"Final loss: {final_loss:.4f}")
