@@ -64,3 +64,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           files: dist/*
+          tag_name: ${{ github.ref_name }}
