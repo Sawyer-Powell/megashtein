@@ -5,7 +5,6 @@ import torch
 from rapidfuzz.distance.Levenshtein import distance as ldistance
 from torch.optim import AdamW
 
-from ..models import EditDistanceModel
 
 
 def pad_with_null(string: str, target_length: int):
