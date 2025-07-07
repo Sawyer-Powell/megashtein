@@ -9,3 +9,4 @@ wheels/
 # Virtual environments
 .venv
 weight.pt
+megashtein_trained_model.pth
