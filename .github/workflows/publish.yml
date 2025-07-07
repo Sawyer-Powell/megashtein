@@ -59,9 +59,3 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
-
-      - name: Create GitHub Release Assets
-        uses: softprops/action-gh-release@v1
-        with:
-          files: dist/*
-          tag_name: ${{ github.ref_name }}
