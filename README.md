@@ -15,12 +15,6 @@ The trained model learns to embed ASCII strings such that the squared Euclidean 
 
 ## Model Architecture
 
-- **Base Architecture**: Convolutional Neural Network with embedding layer
-- **Input**: ASCII sequences up to 80 characters (padded with null characters)
-- **Output**: 80-dimensional dense embeddings
-- **Vocab Size**: 128 (ASCII character set)
-- **Embedding Dimension**: 140
-
 The model uses a 5-layer CNN with average pooling followed by fully connected layers to produce fixed-size embeddings from variable-length ASCII sequences.
 
 ## Installation
@@ -50,15 +44,6 @@ emb2 = embed_string(model, text2)
 approx_distance = torch.sum((emb1 - emb2) ** 2).item()
 print(f"Approximate edit distance: {approx_distance}")
 ```
-
-## Training Details
-
-The model is trained using:
-- **Loss Function**: Poisson Negative Log-Likelihood (PNLL)
-- **Optimizer**: AdamW with learning rate 0.000817
-- **Batch Size**: 32
-- **Sequence Length**: 80 characters (fixed)
-- **Synthetic Data**: Pairs of ASCII strings with known Levenshtein distances
 
 ## Use Cases
 
