@@ -23,34 +23,28 @@ The trained model learns to embed ASCII strings such that the squared Euclidean 
 
 The model uses a 5-layer CNN with average pooling followed by fully connected layers to produce fixed-size embeddings from variable-length ASCII sequences.
 
+## Installation
+
+```bash
+pip install megashtein
+```
+
 ## Usage
 
 ```python
 import torch
-from models import EditDistanceModel
+from megashtein import load_model, embed_string
 
-# Load the model
-model = EditDistanceModel(embedding_dim=140)
-model.load_state_dict(torch.load('megashtein_trained_model.pth'))
-model.eval()
-
-# Embed strings
-def embed_string(text, max_length=80):
-    # Pad and convert to tensor
-    padded = (text + '\0' * max_length)[:max_length]
-    indices = [min(ord(c), 127) for c in padded]
-    tensor = torch.tensor(indices, dtype=torch.long).unsqueeze(0)
-
-    with torch.no_grad():
-        embedding = model(tensor)
-    return embedding
+# Load the pre-trained model
+model = load_model()
 
 # Example usage
 text1 = "hello world"
 text2 = "hello word"
 
-emb1 = embed_string(text1)
-emb2 = embed_string(text2)
+# Embed strings
+emb1 = embed_string(model, text1)
+emb2 = embed_string(model, text2)
 
 # Compute approximate edit distance
 approx_distance = torch.sum((emb1 - emb2) ** 2).item()
