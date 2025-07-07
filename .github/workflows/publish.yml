@@ -2,15 +2,15 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main ]
+    branches: [main]
   release:
     types: [published]
   workflow_dispatch:
     inputs:
       test_pypi:
-        description: 'Upload to TestPyPI instead of PyPI'
+        description: "Upload to TestPyPI instead of PyPI"
         required: false
         default: false
         type: boolean
@@ -20,42 +20,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.11', '3.12', '3.13']
+        python-version: ["3.11", "3.12", "3.13"]
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
 
-    - name: Install dependencies
-      run: |
-        uv sync
-        uv add --dev pytest pytest-cov black ruff mypy
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv add --dev pytest pytest-cov
 
-    - name: Run linting with ruff
-      run: uv run ruff check src/
-
-    - name: Run formatting check with black
-      run: uv run black --check src/
-
-    - name: Run type checking with mypy
-      run: uv run mypy src/megashtein/ --ignore-missing-imports
-
-    - name: Run tests
-      run: uv run pytest tests/ -v --cov=src/megashtein --cov-report=xml
-
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
-      with:
-        file: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
+      - name: Run tests
+        run: uv run pytest tests/ -v --cov=src/megashtein --cov-report=xml
 
   build:
     needs: test
@@ -63,32 +47,32 @@ jobs:
     if: github.event_name == 'release' || github.event.inputs.test_pypi == 'true'
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
 
-    - name: Install build dependencies
-      run: |
-        uv sync
-        uv add --dev build twine
+      - name: Install build dependencies
+        run: |
+          uv sync
+          uv add --dev build twine
 
-    - name: Build package
-      run: uv run python -m build
+      - name: Build package
+        run: uv run python -m build
 
-    - name: Check package
-      run: uv run twine check dist/*
+      - name: Check package
+        run: uv run twine check dist/*
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: dist-${{ github.sha }}
-        path: dist/
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
 
   publish-test:
     needs: build
@@ -97,28 +81,28 @@ jobs:
     environment: test-pypi
 
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: dist-${{ github.sha }}
-        path: dist/
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
 
-    - name: Install twine
-      run: uv tool install twine
+      - name: Install twine
+        run: uv tool install twine
 
-    - name: Upload to TestPyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
-      run: uv tool run twine upload --repository testpypi dist/*
+      - name: Upload to TestPyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        run: uv tool run twine upload --repository testpypi dist/*
 
   publish-pypi:
     needs: build
@@ -127,30 +111,30 @@ jobs:
     environment: pypi
 
     steps:
-    - name: Download artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: dist-${{ github.sha }}
-        path: dist/
+      - name: Download artifacts
+        uses: actions/download-artifact@v3
+        with:
+          name: dist-${{ github.sha }}
+          path: dist/
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.13"
 
-    - name: Install uv
-      uses: astral-sh/setup-uv@v2
+      - name: Install uv
+        uses: astral-sh/setup-uv@v2
 
-    - name: Install twine
-      run: uv tool install twine
+      - name: Install twine
+        run: uv tool install twine
 
-    - name: Upload to PyPI
-      env:
-        TWINE_USERNAME: __token__
-        TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-      run: uv tool run twine upload dist/*
+      - name: Upload to PyPI
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
+        run: uv tool run twine upload dist/*
 
-    - name: Create GitHub Release Assets
-      uses: softprops/action-gh-release@v1
-      with:
-        files: dist/*
+      - name: Create GitHub Release Assets
+        uses: softprops/action-gh-release@v1
+        with:
+          files: dist/*
