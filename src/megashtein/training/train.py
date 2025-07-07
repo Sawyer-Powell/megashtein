@@ -4,12 +4,15 @@ import numpy as np
 import torch
 from rapidfuzz.distance.Levenshtein import distance as ldistance
 from torch.optim import AdamW
-from models import EditDistanceModel
+
+from ..models import EditDistanceModel
+
 
 def pad_with_null(string: str, target_length: int):
     null_char = "\0"
     padding_needed = max(0, target_length - len(string))
     return (string + (null_char * padding_needed))[:target_length]
+
 
 def string_to_tensor(string: str, length: int) -> torch.Tensor:
     """Converts a string to a tensor of character indices."""
@@ -18,12 +21,15 @@ def string_to_tensor(string: str, length: int) -> torch.Tensor:
     indices = [min(ord(c), 127) for c in padded]
     return torch.tensor(indices, dtype=torch.long)
 
+
 def random_char() -> str:
     pos = randint(0, len(printable) - 1)
     return printable[pos]
 
+
 def random_str(length: int) -> str:
     return "".join([random_char() for _ in range(length)])
+
 
 def mangle_string(source: str, d: int) -> str:
     """
@@ -63,12 +69,14 @@ def mangle_string(source: str, d: int) -> str:
 
     return "".join(mangled)
 
+
 def get_random_edit_distance(
     minimum: int, maximum: int, mean: float, dev: float
 ) -> int:
     sample = np.random.normal(loc=mean, scale=dev)
     sample = int(sample)
     return min(max(sample, minimum), maximum)
+
 
 def get_homologous_pair(
     source: str, length: int
@@ -85,6 +93,7 @@ def get_homologous_pair(
         string_to_tensor(mangled, length),
         torch.tensor(float(actual_distance), dtype=torch.float),
     )
+
 
 def get_non_homologous_pair(
     length: int,
@@ -107,8 +116,10 @@ def get_non_homologous_pair(
         torch.tensor(float(distance), dtype=torch.float),
     )
 
+
 def squared_euclidean_distance(v1: torch.Tensor, v2: torch.Tensor) -> torch.Tensor:
     return torch.sum((v1 - v2) ** 2, dim=1)
+
 
 def get_batch(
     size: int, batch_size: int
@@ -129,6 +140,7 @@ def get_batch(
 
     return all_pairs
 
+
 def estimate_M(length: int, num_samples: int = 1000) -> float:
     """Estimates M, the average Levenshtein distance for non-homologous pairs."""
     total_distance = 0.0
@@ -137,9 +149,11 @@ def estimate_M(length: int, num_samples: int = 1000) -> float:
         total_distance += dist_tensor.item()
     return total_distance / num_samples
 
+
 def get_distances(
     batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]],
     model: torch.nn.Module,
+    distance_metric: str = "euclidean",
     M: float | None = None,
     embedding_dim: int | None = None
 ):
@@ -161,8 +175,10 @@ def get_distances(
 
     return (d_hats, ds)
 
+
 def approximation_error(d_hat: torch.Tensor, d: torch.Tensor):
     return torch.mean(torch.abs(d - d_hat))
+
 
 def get_loss(d_hat: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
     """
@@ -173,6 +189,7 @@ def get_loss(d_hat: torch.Tensor, d: torch.Tensor) -> torch.Tensor:
     epsilon = 1e-8
     d_hat_stable = torch.clamp(d_hat, min=epsilon)
     return torch.mean(d_hat_stable - d * torch.log(d_hat_stable))
+
 
 def validate_training_data(batch: list[tuple[torch.Tensor, torch.Tensor, torch.Tensor]]) -> dict:
     """Validate and analyze training batch quality"""
@@ -188,6 +205,7 @@ def validate_training_data(batch: list[tuple[torch.Tensor, torch.Tensor, torch.T
     }
 
     return stats
+
 
 def run_experiment(
     embedding_dim: int,
@@ -215,7 +233,9 @@ def run_experiment(
     for x in range(num_steps):
         batch = get_batch(size, batch_size)
 
-        distances = get_distances(batch, model, distance_metric, M=M_estimate, embedding_dim=embedding_dim)
+        distances = get_distances(
+            batch, model, distance_metric, M=M_estimate, embedding_dim=embedding_dim
+        )
         loss = get_loss(distances[0], distances[1])
 
         if x % 10 == 0:
@@ -231,28 +251,3 @@ def run_experiment(
         final_approx_error = approximation_error(distances[0], distances[1]).item()
 
     return final_loss, final_approx_error
-
-if __name__ == "__main__":
-    embedding_dim = 140
-
-    model = EditDistanceModel(embedding_dim=embedding_dim)
-
-    final_loss, final_approx_error = run_experiment(
-        embedding_dim=embedding_dim,
-        model=model,
-        learning_rate=0.000817,
-        num_steps=1000,
-        size=80,
-        batch_size=32,
-        use_gradient_clipping=True,
-        max_grad_norm=2.463,
-        distance_metric="euclidean",
-    )
-
-    print(f"Final loss: {final_loss:.4f}")
-    print(f"Final approximation error: {final_approx_error:.4f}")
-
-    # Save the trained model
-    model_path = "megashtein_trained_model.pth"
-    torch.save(model.state_dict(), model_path)
-    print(f"\n model saved to: {model_path}")

@@ -1,9 +1,28 @@
 [project]
 name = "megashtein"
 version = "0.1.0"
-description = "Add your description here"
+description = "Neural network-based string similarity using squared Euclidean approximation to Levenshtein distance"
 readme = "README.md"
 requires-python = ">=3.13"
+license = { text = "MIT" }
+authors = [{ name = "Sawyer Powell", email = "sawyerhpowell@gmail.com" }]
+keywords = [
+    "string-similarity",
+    "levenshtein-distance",
+    "neural-network",
+    "pytorch",
+    "fuzzy-search",
+]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Text Processing",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
 dependencies = [
     "numpy>=2.2.4",
     "optuna>=4.4.0",
@@ -12,3 +31,19 @@ dependencies = [
     "rapidfuzz>=3.12.2",
     "torch>=2.6.0",
 ]
+
+[project.urls]
+Homepage = "https://github.com/Sawyer-Powell/megashtein"
+Repository = "https://github.com/Sawyer-Powell/megashtein"
+Documentation = "https://github.com/Sawyer-Powell/megashtein"
+Issues = "https://github.com/Sawyer-Powell/megashtein"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/megashtein"]
+
+[dependency-groups]
+dev = ["build>=1.2.2.post1", "twine>=6.1.0"]
